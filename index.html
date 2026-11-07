@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <title>Gym Log</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -27,12 +27,12 @@
   --mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
 }
 * { box-sizing: border-box; }
-:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
-body { margin: 0; overscroll-behavior-y: none; }
+body { margin: 0; overscroll-behavior: none; }
+/* no double-tap zoom on controls */
+html, button, a, input, label, select, textarea { touch-action: manipulation; }
 img { max-width: 100%; }
 [hidden] { display: none !important; }
-body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); background: var(--bg); z-index: 40; }
-html, body { height: 100%; }
+html, body { height: 100%; overflow: hidden; }
 body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 15px; -webkit-font-smoothing: antialiased; }
 button, input, select, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; }
@@ -47,20 +47,21 @@ h2 { font-size: 34px; }
 h3 { font-size: 24px; }
 
 /* shell */
-#app { min-height: 100%; }
-.shell { display: flex; min-height: 100%; }
+#app { position: fixed; inset: 0; display: flex; flex-direction: column; padding-top: env(safe-area-inset-top, 0px); background: var(--bg); }
+.shell { flex: 1; min-height: 0; display: flex; }
 .rail { display: none; }
-.main { flex: 1; min-width: 0; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 200px; }
+.main { flex: 1; min-width: 0; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 32px; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; }
+#app > .main { flex: 1; min-height: 0; }
 .col { max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
 .wide { max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
-.bottomnav { position: fixed; left: 0; right: 0; bottom: 0; padding: 0 max(16px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); z-index: 30; pointer-events: none; }
-.bottomnav nav { pointer-events: auto; max-width: 520px; margin: 0 auto; display: flex; justify-content: space-between; padding: 8px; border-radius: 28px; background: var(--nav); border: 1px solid #2A2A2D; }
+.bottomnav { flex-shrink: 0; padding: 8px max(16px, env(safe-area-inset-right, 0px)) calc(8px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); background: var(--bg); }
+.bottomnav nav { max-width: 520px; margin: 0 auto; display: flex; justify-content: space-between; padding: 8px; border-radius: 28px; background: var(--nav); border: 1px solid #2A2A2D; }
 .navbtn { flex: 1; height: 48px; border-radius: 20px; display: flex; align-items: center; justify-content: center; gap: 6px; border: 0; background: transparent; color: var(--fg); }
 .navbtn span { display: none; }
 .navbtn.on { background: var(--ice); color: var(--ink); }
 .navbtn svg { stroke: currentColor; }
 @media (min-width: 960px) {
-  .rail { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 96px; flex-shrink: 0; padding: 24px 0; border-right: 1px solid #2A2A2D; position: sticky; top: 0; height: 100vh; }
+  .rail { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 96px; flex-shrink: 0; padding: 24px 0; border-right: 1px solid #2A2A2D; overflow-y: auto; }
   .rail .navbtn { flex: 0 0 auto; width: 56px; height: 52px; border-radius: 18px; }
   .rail .sep { width: 32px; height: 1px; background: var(--line); margin: 4px 0; }
   .bottomnav { display: none; }
@@ -121,6 +122,10 @@ select.inp { appearance: none; background-image: linear-gradient(45deg, transpar
 .seg { display: flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--card-dim); border: 1px solid var(--edge); }
 .seg button { flex: 1; height: 40px; border-radius: 999px; border: 0; background: transparent; color: var(--muted); font-family: var(--mono); font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
 .seg button.on { background: var(--fg); color: var(--ink); }
+.seg button { white-space: nowrap; }
+/* exercise actions: one row of five on a phone */
+.exops { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.exops .pill { padding: 0 4px; justify-content: center; }
 .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(96px + env(safe-area-inset-bottom, 0px)); background: var(--fg); color: var(--ink); padding: 12px 18px; border-radius: 999px; font-family: var(--mono); font-size: 12px; font-weight: 700; z-index: 60; text-transform: uppercase; letter-spacing: .04em; }
 @media (min-width: 960px) { .toast { bottom: 32px; } }
 .banner { border-radius: 20px; padding: 12px 16px; background: var(--card-dim); border: 1px solid var(--edge); font-size: 14px; color: var(--muted); }
@@ -150,10 +155,14 @@ select.inp { appearance: none; background-image: linear-gradient(45deg, transpar
 .exrow .dot { width: 30px; height: 30px; border-radius: 999px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--ink); }
 .setrow { display: grid; grid-template-columns: 28px 1fr auto; align-items: center; gap: 10px; min-height: 40px; padding: 4px 0; border-top: 1px solid rgba(21,21,21,.2); width: 100%; background: transparent; border-left: 0; border-right: 0; border-bottom: 0; color: inherit; text-align: left; }
 .setrow b { font-family: var(--mono); font-size: 12px; }
-.restbar { position: fixed; left: 0; right: 0; bottom: calc(84px + env(safe-area-inset-bottom, 0px)); z-index: 25; padding: 0 max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px)); pointer-events: none; }
-.restbar > div { pointer-events: auto; max-width: 520px; margin: 0 auto; display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 18px; border-radius: 999px; background: var(--ice); color: var(--ink); box-shadow: 0 10px 30px rgba(0,0,0,.4); }
-@media (min-width: 960px) { .restbar { bottom: 24px; padding-left: 128px; } }
-.restbar .clock { font-family: var(--display); font-size: 30px; font-weight: 700; font-variant-numeric: tabular-nums; }
+/* workout dock: replaces the nav during a session */
+.dock { flex-shrink: 0; padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); background: var(--nav); border-top: 1px solid #2A2A2D; }
+.dock > div { max-width: 520px; margin: 0 auto; display: flex; align-items: center; gap: 10px; }
+.dock .rest { flex: 1; min-width: 0; height: 52px; display: flex; align-items: center; gap: 8px; padding: 0 6px 0 16px; border-radius: 999px; background: var(--ice); color: var(--ink); }
+.dock .idle { flex: 1; min-width: 0; height: 52px; display: flex; align-items: center; gap: 8px; padding: 0 16px; border-radius: 999px; background: var(--card); }
+.dock .clock { font-family: var(--display); font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.dock .fin { height: 52px; padding: 0 22px; border: 0; border-radius: 999px; background: var(--coral); color: var(--ink); font-family: var(--mono); font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; flex-shrink: 0; }
+.toast button { margin-left: 10px; height: 30px; padding: 0 12px; border: 0; border-radius: 999px; background: var(--ink); color: var(--fg); font: inherit; }
 
 /* bars */
 .mbar { display: grid; grid-template-columns: 92px 1fr 76px; align-items: center; gap: 10px; }
@@ -186,7 +195,10 @@ select.inp { appearance: none; background-image: linear-gradient(45deg, transpar
 .tbl { width: 100%; border-collapse: collapse; font-size: 14px; }
 .tbl th { text-align: left; font-family: var(--mono); font-size: 10px; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); font-weight: 500; padding: 6px 8px; }
 .tbl td { padding: 6px 8px; border-top: 1px solid var(--line); vertical-align: middle; }
-.tbl .inp { height: 38px; border-radius: 12px; font-size: 14px; padding: 0 10px; }
+.tbl .inp { height: 38px; border-radius: 12px; font-size: 16px; padding: 0 10px; }
+/* iOS date boxes ignore width unless their native look is removed */
+input[type="date"].inp { -webkit-appearance: none; appearance: none; display: block; min-width: 0; max-width: 100%; text-align: left; line-height: 48px; }
+input[type="date"].inp::-webkit-date-and-time-value { text-align: left; margin: 0; }
 .tbl select.inp { padding-right: 28px; }
 .scrollx { overflow-x: auto; }
 .tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; }
@@ -260,8 +272,10 @@ const Store = {
     if (op === 'set') this.docs[path] = clone(data);
     else if (op === 'update') this.docs[path] = deepMerge(clone(this.docs[path] || seedFor(path) || {}), clone(data));
     else if (op === 'delete') delete this.docs[path];
+    if (op === 'delete') { clearTimeout(this.timers[path]); delete this.timers[path]; this.dirty.delete(path); }
     this.bump();
-    this.send(op === 'update' && !this.known.has(path) ? 'set' : op, path, op === 'update' && !this.known.has(path) ? this.docs[path] : data);
+    // a partial change is merged into the stored record, never sent as the whole record
+    this.send(op === 'update' ? 'merge' : op, path, data);
   },
   // debounced whole-doc write for docs edited many times a minute (the live session, a programme being edited)
   touch(path, ms = 700) {
@@ -284,7 +298,7 @@ const Store = {
       this.pending.push({ op, path, data: clone(data) }); this.persist(); setSync();
     }
   },
-  exec(op, path, data) { const ref = this.db.doc(path); return op === 'delete' ? ref.delete() : ref.set(data); },
+  exec(op, path, data) { const ref = this.db.doc(path); return op === 'delete' ? ref.delete() : op === 'merge' ? ref.merge(data) : ref.set(data); },
   async drain() {
     while (this.db && this.pending.length) {
       const p = this.pending[0];
@@ -394,8 +408,8 @@ function volume(endDate = today(), days = 14, extraSessions = []) {
 /* ============================== ui state ============================== */
 const S = { route: 'train', sub: null, sheet: null, ui: {}, toast: null };
 const PHONE_ROUTES = ['train', 'prompt', 'session', 'finish', 'weight', 'cardio'];
-function go(route, sub) { S.route = route; S.sub = sub || null; S.sheet = null; if (['train', 'weight', 'cardio', 'dash', 'ex', 'gyms', 'prog'].includes(route)) { try { history.replaceState(null, '', '#' + route); } catch {} } window.scrollTo(0, 0); render(true); }
-function toast(msg) { S.toast = msg; render(true); clearTimeout(toast.t); toast.t = setTimeout(() => { S.toast = null; render(true); }, 2600); }
+function go(route, sub) { S.route = route; S.sub = sub || null; S.sheet = null; if (['train', 'weight', 'cardio', 'dash', 'ex', 'gyms', 'prog'].includes(route)) { try { history.replaceState(null, '', '#' + route); } catch {} } S.resetScroll = true; render(true); }
+function toast(msg, action) { S.toast = msg; S.toastAct = action || null; render(true); clearTimeout(toast.t); toast.t = setTimeout(() => { S.toast = null; S.toastAct = null; render(true); }, action ? 6000 : 2600); }
 function setSync() { const el = document.getElementById('sync'); if (!el) return; el.className = 'sync ' + syncState(); el.title = syncLabel(); }
 const syncState = () => Store.err ? 'local' : (Store.pending.length || Store.dirty.size || Store.inflight) ? 'saving' : '';
 const syncLabel = () => Store.err ? 'Firebase is refusing access' : Store.mode === 'loading' ? 'Connecting…' : (Store.pending.length || Store.dirty.size || Store.inflight) ? (navigator.onLine === false ? 'Saved on this device · syncs when back online' : 'Saving…') : 'All changes saved';
@@ -412,7 +426,7 @@ function render(force) {
   if (S.auth !== 'in' || (S.needImport && !HIST)) {
     let gate = '';
     try { gate = S.fatal ? VIEWS.fatal() : S.auth === 'out' ? VIEWS.login() : S.auth === 'in' ? VIEWS.importer(true) : VIEWS.loading(); } catch (e) { gate = esc(e.message); }
-    $app.innerHTML = `<main class="main"><div class="col" style="padding-top:8vh">${gate}</div></main>${S.toast ? `<div class="toast" role="status">${esc(S.toast)}</div>` : ''}`;
+    $app.innerHTML = `<main class="main"><div class="col" style="padding-top:8vh">${gate}</div></main>${toastHtml()}`;
     return;
   }
   const r = S.route;
@@ -422,16 +436,29 @@ function render(force) {
   const deskExtra = [['dash', 'Dashboard'], ['ex', 'Exercises'], ['gyms', 'Gyms'], ['prog', 'Programme'], ['settings', 'Settings']];
   const isOn = k => r === k || (k === 'train' && ['prompt', 'session', 'finish'].includes(r)) || (k === 'dash' && !wide && ['dash', 'ex', 'gyms', 'prog', 'settings'].includes(r));
   const nb = (k, l) => `<button class="navbtn ${isOn(k) ? 'on' : ''}" data-act="go" data-r="${k}" aria-label="${l}" title="${l}">${ic(k === 'dash' ? 'dash' : k, 22)}<span>${l}</span></button>`;
-  const restbar = S.rest && S.rest.until > Date.now() ? `<div class="restbar"><div><span class="mono">Rest</span><span class="clock" id="restclock">${mmss((S.rest.until - Date.now()) / 1000)}</span><span class="grow"></span><button class="pill sm ink" data-act="restAdd">+30 s</button><button class="pill sm ink" data-act="restStop">Done</button></div></div>` : '';
+  const inWorkout = (r === 'session' || r === 'finish') && activeSession();
+  let bottom = `<div class="bottomnav"><nav aria-label="Sections">${navItems.map(([k, l]) => nb(k, l)).join('')}${nb('dash', 'Progress')}</nav></div>`;
+  if (inWorkout && r === 'finish') bottom = '';
+  else if (inWorkout) {
+    const a = activeSession();
+    const left = S.rest && S.rest.until > Date.now()
+      ? `<div class="rest"><span class="mono">Rest</span><span class="clock" id="restclock">${mmss((S.rest.until - Date.now()) / 1000)}</span><span class="grow"></span><button class="pill sm ink" data-act="restAdd">+30 s</button><button class="pill sm ink" data-act="restStop">Done</button></div>`
+      : `<div class="idle"><span class="mono muted">Time</span><span class="clock" id="elapsed">${mmss((Date.now() - a.startedAt) / 1000)}</span></div>`;
+    bottom = `<div class="dock"><div>${left}<button class="fin" data-act="finish">Finish</button></div></div>`;
+  }
+  const prevMain = $app.querySelector('.main'); const prevTop = prevMain ? prevMain.scrollTop : 0;
   $app.innerHTML = `<div class="shell">
     <aside class="rail" aria-label="Sections"><div class="monogram">SW</div>${navItems.map(([k, l]) => nb(k, l)).join('')}<div class="sep"></div>${deskExtra.map(([k, l]) => nb(k, l)).join('')}</aside>
     <main class="main">${body}</main>
   </div>
-  <div class="bottomnav"><nav aria-label="Sections">${navItems.map(([k, l]) => nb(k, l)).join('')}${nb('dash', 'Progress')}</nav></div>
-  ${restbar}${S.sheet ? renderSheet() : ''}${S.toast ? `<div class="toast" role="status">${esc(S.toast)}</div>` : ''}`;
+  ${bottom}${S.sheet ? renderSheet() : ''}${toastHtml()}`;
+  const m = $app.querySelector('.main');
+  if (m) { if (S.resetScroll || render.lastRoute !== r) m.scrollTop = 0; else m.scrollTop = prevTop; }
+  S.resetScroll = false; render.lastRoute = r;
   setSync();
 }
 const $app = document.getElementById('app');
+const toastHtml = () => S.toast ? `<div class="toast" role="status">${esc(S.toast)}${S.toastAct ? `<button data-act="${S.toastAct.act}">${esc(S.toastAct.label)}</button>` : ''}</div>` : '';
 
 /* ============================== components ============================== */
 const head = (eyebrow, title, right = '') => `<div class="head"><div class="stack" style="gap:4px"><div class="mono muted row" style="gap:8px"><span id="sync" class="sync ${syncState()}" title="${esc(syncLabel())}"></span>${esc(eyebrow)}</div><h1>${esc(title)}</h1></div><div class="row">${right}</div></div>`;
@@ -521,7 +548,7 @@ VIEWS.prompt = () => {
   return `<div class="col">
     <div class="row between">${backBtn('train')}<span class="pill sm">Last 14 days</span></div>
     <h1>Volume</h1>
-    <p class="muted" style="margin:0;font-size:14px">Working sets per muscle over the last 14 days against your targets. The pale part of each bar is today’s session. Secondary muscles count as half a set; only completed sessions count.</p>
+    <p class="muted" style="margin:0;font-size:14px">Working sets per muscle over the last 14 days against your targets. The pale part of each bar is today’s session. A secondary muscle counts as 0.5 of a set; only completed sessions count.</p>
     <div class="card dim stack" style="gap:10px">${muscleBars(vol, targets, extra)}</div>
     <div class="seg" role="group" aria-label="How much time today">${[['tight', 'Tight'], ['normal', 'Normal'], ['catch', 'Catch-up']].map(([k, l]) => `<button class="${P.mode === k ? 'on' : ''}" data-act="pmode" data-m="${k}">${l}</button>`).join('')}</div>
     ${P.adds.length ? P.adds.map((a, i) => `<div class="card butter">
@@ -563,20 +590,20 @@ VIEWS.session = () => {
   };
   const idx = a.exercises.indexOf(e);
   return `<div class="col">
-    <div class="row between">${backBtn('train')}<span class="pill" id="elapsed">${mmss(el)}</span><button class="pill" style="background:var(--coral);color:var(--ink)" data-act="go" data-r="finish">Finish</button></div>
+    <div class="row between">${backBtn('train')}<span class="mono muted">${done} of ${total} done</span></div>
     <div class="stack" style="gap:4px"><span class="mono muted">${esc(gymLabel(a.gym, true))} · ${fd(a.date)}</span><h1>${esc(a.type)}</h1></div>
     <div class="prog">${a.exercises.map(x => `<i class="${x.done ? 'done' : x.skipped ? 'skip' : x.uid === S.ui.cur ? 'cur' : ''}"></i>`).join('')}</div>
-    <span class="mono muted">${done} of ${total} done</span>
     ${a.exercises.slice(0, Math.max(0, idx)).map((x, i) => rowFor(x, i)).join('')}
     ${e ? activeCard(a, e) : '<div class="empty">No exercises yet. Add one below.</div>'}
     ${a.exercises.slice(idx + 1).map((x, i) => rowFor(x, idx + 1 + i)).join('')}
     <button class="big ghost" data-act="sheet" data-k="addex">+ Add exercise</button>
+    <button class="big coral" data-act="finish">Finish workout</button>
     <p class="mono muted" style="margin:0;font-size:10px;line-height:1.6">Every set saves as you log it. Close the app any time and come back to this session.</p>
   </div>`;
 };
 function activeCard(a, e) {
   if (!e.mov) {
-    return `<div class="card butter"><span class="mono">Custom slot · ${esc(e.muscle)}</span><h2>Pick on the day</h2><span style="font-size:14px">${e.planned || 0} sets for ${esc(e.muscle)}. Choose whatever this gym has.</span><button class="big ink" data-act="sheet" data-k="pickex" data-u="${e.uid}" data-m="${esc(e.muscle)}">Pick exercise</button><div class="row wrap"><button class="pill sm inkline" data-act="exop" data-op="skip">Skip</button><button class="pill sm inkline" data-act="exop" data-op="remove">Remove</button></div></div>`;
+    return `<div class="card butter"><span class="mono">Custom slot · ${esc(e.muscle)}</span><h2>Pick on the day</h2><span style="font-size:14px">${e.planned || 0} sets for ${esc(e.muscle)}. Choose whatever this gym has.</span><button class="big ink" data-act="sheet" data-k="pickex" data-u="${e.uid}" data-m="${esc(e.muscle)}">Pick exercise</button><div class="row wrap"><button class="pill sm inkline" data-act="exop" data-op="skip">${e.skipped ? 'Unskip' : 'Skip'}</button></div></div>`;
   }
   const vk = e.mov + '~' + e.var; const vi = vinfo(e.mov, e.var, a.gym); const unit = vi.unit;
   const last = lastFor(vk, a.gym, a.id);
@@ -600,7 +627,7 @@ function activeCard(a, e) {
     <div class="g2" style="gap:10px">${stepper('r', ed.r, vi.timed ? 5 : 1, vi.timed ? 'sec' : vi.repsPerSide ? 'each' : 'reps', vi.timed ? 'Seconds' : 'Reps')}${stepper('w', ed.w, wStep, unit, vi.load === 'bodyweight' ? 'Added weight' : vi.load === 'per_db' ? 'Each dumbbell' : vi.load === 'per_side' ? 'Each side' : 'Weight')}</div>
     ${editing ? `<div class="row"><button class="big ink grow" data-act="logset">Save set ${ed.idx + 1}</button><button class="pill inkline" data-act="delset">Delete</button><button class="pill inkline" data-act="canceledit">Cancel</button></div>`
       : (shortcut ? `<a class="big ink" href="${esc(shortcut)}" data-act="logset" data-sc="1">Log set · start ${mmss(e.rest || 120)} rest</a>` : `<button class="big ink" data-act="logset">Log set · start ${mmss(e.rest || 120)} rest</button>`)}` : `<div class="row between"><span class="mono">All ${n} sets logged</span><button class="pill sm inkline" data-act="exop" data-op="more">+ Another set</button></div>`}
-    <div class="row wrap"><button class="pill sm inkline" data-act="exop" data-op="minus">− Set</button><button class="pill sm inkline" data-act="exop" data-op="plus">+ Set</button><button class="pill sm inkline" data-act="sheet" data-k="drop" ${n ? '' : 'disabled'}>Drop set</button><button class="pill sm inkline" data-act="exop" data-op="skip">Skip</button><button class="pill sm inkline" data-act="sheet" data-k="note">${e.note ? 'Note ✓' : 'Note'}</button>${n ? '' : `<button class="pill sm inkline" data-act="exop" data-op="remove">Remove</button>`}</div>
+    <div class="exops"><button class="pill sm inkline" data-act="exop" data-op="minus">− Set</button><button class="pill sm inkline" data-act="exop" data-op="plus">+ Set</button><button class="pill sm inkline" data-act="sheet" data-k="drop" ${n ? '' : 'disabled'}>Drop</button><button class="pill sm inkline" data-act="exop" data-op="skip">${e.skipped ? 'Unskip' : 'Skip'}</button><button class="pill sm inkline" data-act="sheet" data-k="note">${e.note ? 'Note ✓' : 'Note'}</button></div>
     ${e.note ? `<div style="font-size:14px">${esc(e.note)}</div>` : ''}
   </div>`;
 }
@@ -730,7 +757,7 @@ VIEWS.dash = wide => {
     <div class="g3">
       <div class="card coral span2"><div class="row between wrap"><h2>Sets · last 14 days</h2><span class="chip">${esc(prog ? prog.name : '')} targets</span></div>
         <div class="stack" style="gap:8px">${MUSCLES.filter(m => targets[m] || vol[m]).map(m => { const v = vol[m] || 0; const tg = targets[m]; const mx = Math.max(...MUSCLES.map(k => Math.max(vol[k] || 0, (targets[k] || [0, 0])[1]))) * 1.08 || 1; return `<div class="mbar" style="grid-template-columns:92px 1fr 64px"><span class="nm">${esc(m)}</span><div class="track" style="background:rgba(21,21,21,.12);border:0">${tg ? `<div class="band" style="left:${tg[0] / mx * 100}%;width:${(tg[1] - tg[0]) / mx * 100}%;background:repeating-linear-gradient(135deg, rgba(21,21,21,.25) 0 4px, transparent 4px 8px)"></div>` : ''}<div class="fill" style="width:${v / mx * 100}%;background:${tg && v < tg[0] ? 'var(--ink)' : 'var(--fg)'}"></div></div><span class="v num">${nfmt(v)}${tg ? ' / ' + tg[0] + '–' + tg[1] : ''}</span></div>`; }).join('')}</div>
-        <span class="mono" style="font-size:10px">Hatched band = target · dark bar = below target · secondary muscles count half</span></div>
+        <span class="mono" style="font-size:10px">Hatched band = target · dark bar = below target · secondary muscles count 0.5 per set</span></div>
       <div class="card violet"><h2>Training days</h2><div class="cal mono" style="font-size:10px;font-weight:700"><b>M</b><b>T</b><b>W</b><b>T</b><b>F</b><b>S</b><b>S</b>${days.map(x => `<span title="${x}" style="${x > t ? 'opacity:.25;border:1.5px dashed rgba(21,21,21,.5)' : trained.has(x) ? (x === t ? 'background:var(--ink)' : 'background:var(--fg)') : 'border:1.5px dashed rgba(21,21,21,.45)'}"></span>`).join('')}</div><span class="mono">${in28} sessions in the last 28 days</span></div>
       <button class="card sea" style="border:0;text-align:left;color:var(--ink);cursor:pointer" data-act="go" data-r="weight"><div class="row between"><h2>Bodyweight</h2><span class="iconbtn ink">${ic('arrow', 18, 2.2)}</span></div><div class="row" style="align-items:baseline"><span style="font-family:var(--display);font-size:56px;font-weight:700;line-height:1">${lastBw ? nfmt(lastBw.lbs) : '—'}</span><span class="mono">lb · ${lastBw ? fd(lastBw.date) : ''}</span></div>${spark}</button>
       <div class="card butter"><h2>${yr} so far</h2><div class="tiles">${[[yS.length, 'Sessions'], [gymsY.size, 'Gyms'], [countries.size, 'Countries']].map(([v, l]) => `<div class="tile" style="background:var(--fg)"><b class="num">${v}</b><span class="mono" style="font-size:10px">${l}</span></div>`).join('')}</div><span class="mono" style="font-size:10px;line-height:1.5">${esc([...countries].join(' · '))}</span></div>
@@ -741,7 +768,7 @@ VIEWS.dash = wide => {
 
 /* ---------- Exercises ---------- */
 VIEWS.ex = wide => {
-  const E = S.ui.ex || (S.ui.ex = { q: '', mov: 'chest-press', var: null, gym: '' });
+  const E = S.ui.ex || (S.ui.ex = { q: '', mov: 'chest-press', var: null, gym: '', metric: 'top' });
   const d = derived(); const M = movs();
   const counts = {}; for (const [k, l] of d.byV) { const m = k.split('~')[0]; counts[m] = (counts[m] || 0) + l.length; }
   const q = E.q.trim().toLowerCase();
@@ -753,15 +780,17 @@ VIEWS.ex = wide => {
     if (!E.var || !m.variants[E.var]) E.var = (vars.find(x => x.n) || vars[0] || {}).vid;
     const vk = E.mov + '~' + E.var; const vi = vinfo(E.mov, E.var, null);
     const entries = (d.byV.get(vk) || []).filter(x => !x.deload && (!E.gym || x.gym === E.gym));
-    const byGym = {}; for (const x of (d.byV.get(vk) || [])) { if (x.deload) continue; const b = bestSet(x.sets); const g = byGym[x.gym] || (byGym[x.gym] = { best: null, date: null, n: 0 }); g.n++; if (b && (!g.best || (b.kg ?? 0) > (g.best.kg ?? 0) || ((b.kg ?? 0) === (g.best.kg ?? 0) && (b.r || 0) > (g.best.r || 0)))) { g.best = b; g.date = x.date; } }
-    const gymsSorted = Object.entries(byGym).sort((a, b) => ((b[1].best || {}).kg || 0) - ((a[1].best || {}).kg || 0));
+    const canE1 = !vi.timed && vi.load !== 'bodyweight';
+    const metric = canE1 ? (E.metric || 'top') : 'top';
+    const byGym = {}; for (const x of (d.byV.get(vk) || [])) { if (x.deload) continue; const b = sessionValue(x.sets, metric); const g = byGym[x.gym] || (byGym[x.gym] = { best: null, date: null, n: 0 }); g.n++; if (b && (!g.best || b.v > g.best.v || (b.v === g.best.v && b.r > g.best.r))) { g.best = b; g.date = x.date; } }
+    const gymsSorted = Object.entries(byGym).sort((a, b) => ((b[1].best || {}).v || 0) - ((a[1].best || {}).v || 0));
     detail = `<div class="stack" style="gap:16px">
       <div class="stack" style="gap:6px"><span class="mono muted">${esc((m.muscles || []).join(' · '))}${m.secondary && m.secondary.length ? ' · ' + esc(m.secondary.join(', ')) + ' secondary' : ''}</span><h1>${esc(m.name)}</h1></div>
       <div class="row wrap">${vars.map(x => `<button class="pill sm ${x.vid === E.var ? 'on' : 'ghost'}" data-act="exvar" data-v="${x.vid}">${esc(x.v.name)}${x.n ? ` · ${x.n}` : ''}</button>`).join('')}</div>
       <div class="row wrap"><label class="mono muted" for="ex-load">Load type</label><select id="ex-load" class="inp" style="width:auto;height:40px" data-ch="exload">${Object.entries(LOADS).map(([k, l]) => `<option value="${k}" ${vi.load === k ? 'selected' : ''}>${l}</option>`).join('')}</select><label class="mono muted" for="ex-gym">Gym</label><select id="ex-gym" class="inp" style="width:auto;height:40px;max-width:260px" data-ch="exgym"><option value="">All gyms</option>${gymsSorted.map(([g]) => `<option value="${g}" ${E.gym === g ? 'selected' : ''}>${esc(gymLabel(g, true))}</option>`).join('')}</select></div>
       <div class="g3" style="align-items:start">
-        <div class="card span2"><div class="row between"><span class="mono muted">Top set per session · ${entries.length} sessions</span><span class="mono muted">kg${vi.load === 'per_side' ? ' per side' : vi.load === 'per_db' ? ' per dumbbell' : ''}</span></div>${exChart(entries)}</div>
-        <div class="card butter"><h3>Best by gym</h3><span class="mono" style="font-size:10px">Top weight · kg · different machines</span>${gymsSorted.slice(0, 8).map(([g, x]) => `<div class="listrow"><div class="stack" style="gap:2px"><span class="t">${esc(gymLabel(g, true))}</span><span class="s">${esc((gyms()[g] || {}).city || '')} · ${x.n} session${x.n === 1 ? '' : 's'}${(gyms()[g] || {}).closed ? ' · closed' : ''}${changeDate(g, vk) ? ' · machine changed ' + fd(changeDate(g, vk)) : ''}</span></div><span style="font-family:var(--display);font-size:28px;font-weight:700" class="num">${x.best && x.best.kg != null ? nfmt(x.best.kg) : '—'}</span></div>`).join('') || '<div>No sets yet.</div>'}</div>
+        <div class="card span2"><div class="row between wrap"><span class="mono muted">${metric === 'e1rm' ? 'Best estimated 1RM' : 'Top set'} per session · ${entries.length} sessions · kg${vi.load === 'per_side' ? ' per side' : vi.load === 'per_db' ? ' per dumbbell' : ''}</span>${canE1 ? `<div class="seg" style="padding:3px" role="group" aria-label="Chart measure"><button class="${metric === 'top' ? 'on' : ''}" style="height:32px;padding:0 12px" data-act="exmetric" data-m="top">Top weight</button><button class="${metric === 'e1rm' ? 'on' : ''}" style="height:32px;padding:0 12px" data-act="exmetric" data-m="e1rm">Est. 1RM</button></div>` : ''}</div>${exChart(entries, metric)}${metric === 'e1rm' ? '<span class="mono muted" style="font-size:10px;line-height:1.5">Estimated 1RM = weight × (1 + reps ÷ 30), the Epley formula. Hollow dots: the best set was over 12 reps, so the estimate is rough.</span>' : ''}</div>
+        <div class="card butter"><h3>Best by gym</h3><span class="mono" style="font-size:10px">${metric === 'e1rm' ? 'Estimated 1RM' : 'Top weight'} · kg · different machines</span>${gymsSorted.slice(0, 8).map(([g, x]) => `<div class="listrow"><div class="stack" style="gap:2px"><span class="t">${esc(gymLabel(g, true))}</span><span class="s">${esc((gyms()[g] || {}).city || '')} · ${x.n} session${x.n === 1 ? '' : 's'}${(gyms()[g] || {}).closed ? ' · closed' : ''}${changeDate(g, vk) ? ' · machine changed ' + fd(changeDate(g, vk)) : ''}</span></div><span style="font-family:var(--display);font-size:28px;font-weight:700" class="num">${x.best ? nfmt(r1(x.best.v)) : '—'}</span></div>`).join('') || '<div>No sets yet.</div>'}</div>
       </div>
       <div class="card dim"><span class="mono muted">History</span><div class="scrollx"><table class="tbl"><thead><tr><th>Date</th><th>Gym</th><th>Sets</th></tr></thead><tbody>${entries.slice(-25).reverse().map(x => `<tr><td class="num" style="white-space:nowrap">${fd(x.date, true)}</td><td>${esc(gymLabel(x.gym, true))}</td><td class="num">${esc(fmtSets(x.sets, vi, 'kg'))}</td></tr>`).join('') || '<tr><td colspan="3" class="muted">No sets logged for this variant.</td></tr>'}</tbody></table></div></div>
     </div>`;
@@ -778,24 +807,36 @@ VIEWS.ex = wide => {
     </div>
   </div>`;
 };
-function exChart(entries) {
-  const pts = entries.map(x => ({ date: x.date, b: bestSet(x.sets) })).filter(p => p.b && p.b.kg != null);
+const e1rm = s => s.r <= 1 ? s.kg : s.kg * (1 + s.r / 30);
+// the session's best value for a measure: heaviest set, or highest estimated 1RM (Epley)
+function sessionValue(sets, metric) {
+  let best = null;
+  for (const s of sets || []) {
+    if (s.kg == null || !(s.r > 0)) continue;
+    const v = metric === 'e1rm' ? e1rm(s) : s.kg;
+    if (!best || v > best.v || (v === best.v && s.r > best.r)) best = { v, r: s.r, kg: s.kg };
+  }
+  return best;
+}
+function exChart(entries, metric = 'top') {
+  const pts = entries.map(x => ({ date: x.date, b: sessionValue(x.sets, metric) })).filter(p => p.b);
   if (pts.length < 2) return `<div class="empty">${pts.length ? 'One session so far — the chart starts at two.' : 'No weighted sets for this selection.'}</div>`;
   const W = 760, Hh = 260, P = { l: 40, r: 14, t: 14, b: 26 };
   const t0 = new Date(pts[0].date) - 0, t1 = new Date(pts[pts.length - 1].date) - 0;
-  const vs = pts.map(p => p.b.kg); let lo = Math.min(...vs), hi = Math.max(...vs); const span = Math.max(5, hi - lo); lo = Math.max(0, lo - span * .1); hi = hi + span * .1;
+  const vs = pts.map(p => p.b.v); let lo = Math.min(...vs), hi = Math.max(...vs); const span = Math.max(5, hi - lo); lo = Math.max(0, lo - span * .1); hi = hi + span * .1;
   const nice = [1, 2, 2.5, 5, 10, 20, 25, 50]; const step = nice.find(s => (hi - lo) / s <= 5) || 50;
   const x = d => P.l + ((new Date(d) - t0) / Math.max(1, t1 - t0)) * (W - P.l - P.r);
   const y = v => P.t + (1 - (v - lo) / (hi - lo)) * (Hh - P.t - P.b);
   const ticks = []; for (let v = Math.ceil(lo / step) * step; v <= hi; v += step) ticks.push(v);
   const years = []; for (let yv = +pts[0].date.slice(0, 4) + 1; yv <= +pts[pts.length - 1].date.slice(0, 4); yv++) years.push(yv);
-  const best = pts.reduce((a, p) => p.b.kg > a.b.kg ? p : a, pts[0]);
-  return `<svg viewBox="0 0 ${W} ${Hh}" width="100%" role="img" aria-label="Top set over time" style="display:block">
+  const best = pts.reduce((a, p) => p.b.v > a.b.v ? p : a, pts[0]);
+  const rough = p => metric === 'e1rm' && p.b.r > 12;
+  return `<svg viewBox="0 0 ${W} ${Hh}" width="100%" role="img" aria-label="${metric === 'e1rm' ? 'Estimated 1RM' : 'Top set'} over time" style="display:block">
     ${ticks.map(v => `<line x1="${P.l}" x2="${W - P.r}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-dasharray="3 6"/><text x="${P.l - 6}" y="${y(v) + 4}" text-anchor="end" font-size="11" fill="var(--muted)">${nfmt(v)}</text>`).join('')}
     ${years.map(yv => { const xx = x(yv + '-01-01'); return xx > P.l && xx < W - P.r ? `<line x1="${xx}" x2="${xx}" y1="${P.t}" y2="${Hh - P.b}" stroke="var(--edge)"/><text x="${xx + 4}" y="${Hh - 8}" font-size="11" fill="var(--muted)">${yv}</text>` : ''; }).join('')}
-    <polyline fill="none" stroke="var(--coral)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" points="${pts.map(p => `${x(p.date).toFixed(1)},${y(p.b.kg).toFixed(1)}`).join(' ')}"/>
-    ${pts.map(p => `<circle cx="${x(p.date).toFixed(1)}" cy="${y(p.b.kg).toFixed(1)}" r="3" fill="var(--coral)"><title>${fd(p.date, true)} · ${p.b.r} × ${nfmt(p.b.kg)} kg</title></circle>`).join('')}
-    <circle cx="${x(best.date)}" cy="${y(best.b.kg)}" r="6" fill="var(--fg)"/><text x="${Math.min(x(best.date) + 8, W - 120)}" y="${y(best.b.kg) - 8}" font-size="11" fill="var(--fg)">Best ${nfmt(best.b.kg)} kg · ${fd(best.date, true)}</text>
+    <polyline fill="none" stroke="var(--coral)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" points="${pts.map(p => `${x(p.date).toFixed(1)},${y(p.b.v).toFixed(1)}`).join(' ')}"/>
+    ${pts.map(p => `<circle cx="${x(p.date).toFixed(1)}" cy="${y(p.b.v).toFixed(1)}" r="3.2" fill="${rough(p) ? 'var(--card)' : 'var(--coral)'}" stroke="var(--coral)" stroke-width="1.5"><title>${fd(p.date, true)} · ${p.b.r} × ${nfmt(p.b.kg)} kg${metric === 'e1rm' ? ' · est. 1RM ' + nfmt(r1(p.b.v)) + ' kg' : ''}</title></circle>`).join('')}
+    <circle cx="${x(best.date)}" cy="${y(best.b.v)}" r="6" fill="var(--fg)"/><text x="${Math.min(x(best.date) + 8, W - 170)}" y="${y(best.b.v) - 8}" font-size="11" fill="var(--fg)">Best ${metric === 'e1rm' ? 'est. 1RM ' : ''}${nfmt(r1(best.b.v))} kg · ${fd(best.date, true)}</text>
   </svg>`;
 }
 
@@ -899,7 +940,7 @@ VIEWS.settings = wide => {
       <div class="card"><h3>Rest timer</h3>
         <button class="row between" style="background:none;border:0;padding:0;color:inherit;text-align:left" data-act="togglesc"><span class="stack" style="gap:2px"><span style="font-weight:700">Start the iOS timer when I log a set</span><span class="muted" style="font-size:13px">Runs your Shortcut so the countdown shows in the Dynamic Island</span></span><span class="chip ${st.openShortcutOnLog ? 'ice' : 'line'}">${st.openShortcutOnLog ? 'On' : 'Off'}</span></button>
         <div class="field"><label for="s-sc">Shortcut name</label><input id="s-sc" class="inp" value="${esc(st.restShortcut || '')}" data-sf2="restShortcut"></div>
-        <div class="banner" style="line-height:1.6">One-time setup on your iPhone: open <b>Shortcuts</b> → <b>+</b> → name it <b>${esc(st.restShortcut || 'Gym Rest')}</b>. Add <b>Get Numbers from Input</b>, then <b>Start Timer</b> and set its duration to that number in <b>seconds</b>. In the Shortcut’s settings, turn off “Show When Run” if offered. The app passes the rest length in seconds each time you log a set.</div>
+        <div class="banner" style="line-height:1.6">In the Shortcut <b>${esc(st.restShortcut || 'Gym Rest')}</b>: tap the blue <b>Input</b> in “Get numbers from Input” and choose <b>Shortcut Input</b>. Then tap <b>Duration</b> in “Start a Timer for … seconds” and choose the <b>Numbers</b> variable. Both should then show as filled-in variables, not pale placeholders. The app sends the rest length in seconds each time you log a set; iOS switches to Shortcuts to run it, and <b>◀ Gym Log</b> at the top left brings you back.</div>
       </div>
       <div class="card"><h3>Saving</h3>
         <div class="row"><span class="sync ${syncState()}"></span><span>${esc(syncLabel())}</span></div>
@@ -913,7 +954,7 @@ VIEWS.settings = wide => {
         <button class="pill ghost" data-act="signout">Sign out of this device</button>
       </div>
       <div class="card"><h3>History file</h3>
-        ${S.ui.reimport ? VIEWS.importer(false) : `<span class="muted" style="font-size:14px;line-height:1.5">Re-import only if I send you a corrected history file. It replaces your history, exercises, gyms and programmes with the file's version; sessions you've logged in the app are kept.</span><button class="pill ghost" data-act="reimport">Re-import a history file</button>`}
+        ${S.ui.reimport ? VIEWS.importer(false) : `<span class="muted" style="font-size:14px;line-height:1.5">Use this for a repair file, or if I send you a corrected history file. It replaces your history, exercises, gyms and programmes with the file's version; sessions you've logged in the app are kept.</span><button class="pill ghost" data-act="reimport">Import a file</button>`}
       </div>
     </div>
   </div>`;
@@ -1080,13 +1121,25 @@ const A = {
     S.ui.edit = null; S.sheet = null; render(true);
   },
   addcustomex: () => { const m = S.sheet.m; if (!m) { toast('Pick a muscle first'); return; } const uid = rid(); mutActive(x => { x.exercises.push({ uid, mov: null, var: null, muscle: m, custom: true, planned: 2, reps: '', rest: 120, sets: [], skipped: false, done: false, note: '', extra: 0 }); }, true); S.ui.cur = uid; S.sheet = null; render(true); },
+  finish: () => {
+    const a = activeSession(); if (!a) return;
+    S.rest = null;
+    const n = a.exercises.reduce((k, e) => k + (e.sets || []).length, 0);
+    if (n === 0) {
+      const p = actPath(); S.undo = { path: p, doc: clone(Store.docs[p]) };
+      Store.write('delete', p); S.ui.fin = null; S.ui.edit = null; S.ui.cur = null;
+      go('train'); toast('Workout cancelled', { act: 'undocancel', label: 'Undo' }); return;
+    }
+    S.ui.fin = null; go('finish');
+  },
+  undocancel: () => { if (!S.undo) return; Store.write('set', S.undo.path, S.undo.doc); S.undo = null; S.toast = null; S.toastAct = null; S.ui.cur = null; S.ui.edit = null; go('session'); },
   deload: () => { mutActive(x => { x.deload = !x.deload; }, true); render(true); },
   machine: d => { const F = S.ui.fin; const i = F.machine.indexOf(d.vk); if (i >= 0) F.machine.splice(i, 1); else F.machine.push(d.vk); render(true); },
   savesession: () => {
     const a = activeSession(); const F = S.ui.fin; const p = actPath();
     const kcal = readNum(document.getElementById('fin-kcal').value); const note = document.getElementById('fin-note').value.trim();
-    // drop exercises never started (custom slots not picked, nothing logged)
-    mutActive(x => { x.status = 'done'; x.finishedAt = Date.now(); x.minutes = Math.round((x.finishedAt - x.startedAt) / 60000); x.kcal = kcal; x.note = note; x.exercises = x.exercises.filter(e => e.mov || (e.sets || []).length); }, true);
+    // exercises with nothing logged (skipped, or custom slots never picked) are left out of the record
+    mutActive(x => { x.status = 'done'; x.finishedAt = Date.now(); x.minutes = Math.round((x.finishedAt - x.startedAt) / 60000); x.kcal = kcal; x.note = note; x.exercises = x.exercises.filter(e => (e.sets || []).length); }, true);
     if (F.machine.length) { const g = gyms()[a.gym] || {}; Store.write('update', 'config/gyms', { gyms: { [a.gym]: { machineChanges: [...(g.machineChanges || []), ...F.machine.map(vk => ({ vk, date: a.date }))] } } }); }
     S.ui.fin = null; S.ui.edit = null; S.ui.cur = null; S.rest = null; S.ui.tpl = null; S.ui.tplPicked = false;
     go('train'); toast('Session saved');
@@ -1113,6 +1166,7 @@ const A = {
   delcardio: d => { const doc = clone(Store.get('cardio/' + d.y) || { entries: {} }); delete doc.entries[d.id]; Store.write('set', 'cardio/' + d.y, doc); },
   exmov: d => { S.ui.ex.mov = d.m; S.ui.ex.var = null; S.ui.ex.gym = ''; render(true); },
   exvar: d => { S.ui.ex.var = d.v; render(true); },
+  exmetric: d => { S.ui.ex.metric = d.m; render(true); },
   gsel: d => { S.ui.g.sel = d.g; render(true); },
   gclosed: () => { const id = S.ui.g.sel; Store.write('update', 'config/gyms', { gyms: { [id]: { closed: !gyms()[id].closed } } }); },
   gunit: d => { Store.write('update', 'config/gyms', { gyms: { [S.ui.g.sel]: { unit: d.u } } }); },
@@ -1222,7 +1276,7 @@ VIEWS.login = () => `<div class="stack" style="gap:6px"><span class="mono muted"
   </form>
   <p class="muted" style="font-size:13px">Use the email and password you added under Authentication → Users in Firebase.</p>`;
 VIEWS.importer = gate => `${gate ? `<div class="stack" style="gap:6px"><span class="mono muted">One-time setup</span><h1>Import your history</h1></div><p class="muted" style="margin:0;font-size:15px;line-height:1.5">Choose the file <b>gym-log-import.json</b>. This loads your history from Oct 2020, your exercises, gyms and Full Body Wake Up. You only do this once, on one device; your other devices pick it up automatically.</p>` : ''}
-  <label class="big coral" for="imp-file" style="cursor:pointer">${S.importing ? esc(S.importing) : 'Choose gym-log-import.json'}</label>
+  <label class="big coral" for="imp-file" style="cursor:pointer">${S.importing ? esc(S.importing) : (gate ? 'Choose gym-log-import.json' : 'Choose file')}</label>
   <input id="imp-file" type="file" accept=".json,application/json" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none">
   ${S.importErr ? `<div style="color:var(--coral);font-size:14px">${esc(S.importErr)}</div>` : ''}
   ${gate ? `<button class="pill ghost" data-act="signout">Sign out</button>` : `<button class="pill ghost" data-act="reimportcancel">Cancel</button>`}`;
@@ -1234,6 +1288,13 @@ function assembleHist(docs) {
   return { built: meta.built, variants: meta.variants, sessions, bodyweight: JSON.parse(meta.bodyweight || '[]'), cardio: JSON.parse(meta.cardio || '[]') };
 }
 async function doImport(obj) {
+  if (obj && obj.format === 'gymlog-repair-1' && obj.docs) {
+    if (!HIST) throw new Error('Import your history file first, then the repair file.');
+    S.importing = 'Repairing…'; render(true);
+    for (const [path, v] of Object.entries(obj.docs)) Store.write('update', path, v);
+    await new Promise(r => setTimeout(r, 1500));
+    return 'repair';
+  }
   if (!obj || obj.format !== 'gymlog-import-1' || !obj.history || !obj.history.sessions) throw new Error('That isn’t a Gym Log import file.');
   const h = obj.history; const byYear = {};
   for (const x of h.sessions) (byYear[x.d.slice(0, 4)] || (byYear[x.d.slice(0, 4)] = [])).push(x);
@@ -1251,8 +1312,8 @@ document.addEventListener('change', async ev => {
   S.importErr = null; S.importing = 'Reading file…'; render(true);
   try {
     const obj = JSON.parse(await ev.target.files[0].text());
-    await doImport(obj);
-    S.needImport = false; S.importing = null; S.ui.reimport = false; go('train'); toast(`Imported ${HIST.length} sessions`);
+    const kind = await doImport(obj);
+    S.needImport = false; S.importing = null; S.ui.reimport = false; go('train'); toast(kind === 'repair' ? 'Repair applied' : `Imported ${HIST.length} sessions`);
   } catch (e) { S.importing = null; S.importErr = e.message || String(e); render(true); }
 });
 document.addEventListener('submit', async ev => {
@@ -1313,7 +1374,7 @@ try {
   const fs = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }), ignoreUndefinedProperties: true });
   const db = {
     collection: c => ({ onSnapshot: (next, err) => onSnapshot(collection(fs, c), next, err) }),
-    doc: p => ({ set: d => setDoc(doc(fs, p), d), delete: () => deleteDoc(doc(fs, p)) }),
+    doc: p => ({ set: d => setDoc(doc(fs, p), d), merge: d => setDoc(doc(fs, p), d, { merge: true }), delete: () => deleteDoc(doc(fs, p)) }),
   };
   window.FB = {
     db,
