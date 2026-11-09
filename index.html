@@ -183,6 +183,8 @@ select.inp { appearance: none; background-image: linear-gradient(45deg, transpar
 .dock .idle { flex: 1; min-width: 0; height: 52px; display: flex; align-items: center; gap: 8px; padding: 0 16px; border-radius: 999px; background: var(--card); }
 .dock .clock { font-family: var(--display); font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .dock .fin { height: 52px; padding: 0 22px; border: 0; border-radius: 999px; background: var(--coral); color: var(--ink); font-family: var(--mono); font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; flex-shrink: 0; }
+.ios-band .bottomnav { padding-bottom: 6px; }
+.ios-band .dock { padding-bottom: 8px; }
 .toast button { margin-left: 10px; height: 30px; padding: 0 12px; border: 0; border-radius: 999px; background: var(--ink); color: var(--fg); font: inherit; }
 
 /* bars */
@@ -439,13 +441,17 @@ function estMinutes(items) {
 const slotItems = slots => (slots || []).map(sl => ({ sets: sl.sets, rest: sl.rest, drops: sl.drops }));
 const setsOf = slots => (slots || []).reduce((n, sl) => n + (parseInt(sl.sets) || 0), 0);
 // the most recent session of a programme workout: same programme and workout first, then history by name
+const STOP = new Set(['day', 'session', 'workout', 'and', 'the']);
+const stems = v => String(v || '').toLowerCase().split(/[^a-z]+/).filter(w => w.length > 1 && !STOP.has(w)).map(w => w.replace(/s$/, ''));
 function lastOfWorkout(prog, tpl) {
   if (!prog || !tpl) return null;
-  const all = derived().all;
-  for (let i = all.length - 1; i >= 0; i--) if (all[i].programme === prog.id && all[i].template === tpl.id) return all[i];
-  const nm = String(tpl.name || '').trim().toLowerCase(); if (!nm) return null;
-  for (let i = all.length - 1; i >= 0; i--) if (String(all[i].type || '').trim().toLowerCase() === nm) return all[i];
-  if (nm.length >= 4) for (let i = all.length - 1; i >= 0; i--) if (String(all[i].type || '').toLowerCase().includes(nm)) return all[i];
+  const want = stems(tpl.name); const all = derived().all;
+  // newest first: the same programme workout, or any session whose name contains the workout's words ("Arms" finds "Arm Day")
+  for (let i = all.length - 1; i >= 0; i--) {
+    const s = all[i];
+    if (s.programme === prog.id && s.template === tpl.id) return s;
+    if (want.length) { const have = new Set(stems(s.type)); if (want.every(w => have.has(w))) return s; }
+  }
   return null;
 }
 // a session's exercises as rows that open the Exercises page
@@ -573,13 +579,16 @@ function migrateTargets() {
     Store.write('update', 'programmes/' + p.id, { targets: t, targetsPer: 'week' });
   }
 }
-// iOS home-screen apps can report a window shorter than the screen; size the app to the screen so the bars reach the bottom
+// iOS 26 home-screen apps get a window shorter than the screen and iOS draws its own band below it
+// (WebKit bug 301994). That band already covers the home indicator, so the app's own bottom padding is dropped.
 function fitHeight() {
   const app = document.getElementById('app'); if (!app) return;
+  app.style.bottom = ''; app.style.height = '';
   const standalone = navigator.standalone === true || matchMedia('(display-mode: standalone)').matches;
   const full = Math.max(screen.width, screen.height); const portrait = innerHeight > innerWidth; const gap = full - innerHeight;
-  if (standalone && portrait && gap > 20 && gap < 140) { app.style.bottom = 'auto'; app.style.height = full + 'px'; S.fit = `window ${innerHeight} pt · screen ${full} pt · adjusted`; }
-  else { app.style.bottom = ''; app.style.height = ''; S.fit = `window ${innerHeight} pt · screen ${full} pt${standalone ? '' : ' · browser'}`; }
+  const band = standalone && portrait && gap > 40 && gap < 140;
+  document.documentElement.classList.toggle('ios-band', band);
+  S.fit = `window ${innerHeight} pt · screen ${full} pt${standalone ? '' : ' · browser'}${band ? ' · iOS band' : ''}`;
 }
 
 /* ============================== ui state ============================== */
